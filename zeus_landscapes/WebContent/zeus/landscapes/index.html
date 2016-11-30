@@ -53,7 +53,7 @@
 		</div>
 		<div class="container">
 			<!-- Button trigger modal -->
-			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#dialogCreateDeployment">+ CREATE</button>
+			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#dialogCreateDeployment"><i class="fa fa-plus"></i> CREATE</button>
 			<table class="table table-condensed">
 				<thead>
 					<tr>
@@ -87,10 +87,10 @@
 				</div>
 				<div class="modal-body">
 					<p>Name:</p>
-					<input type="text" class="form-control" ng-model="deploymentName">
+					<input type="text" class="form-control" ng-model="deploymentData.name">
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" ng-click="create(deploymentName)" data-dismiss="modal">Deploy</button>
+					<button type="button" class="btn btn-primary" ng-click="create()" data-dismiss="modal">Deploy</button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 				</div>
 			</div>
@@ -112,8 +112,8 @@
 					<p>Are you sure you want to delete Deployment <b><i>{{deleteDeploymentName}}</i></b> in namespace <b><i>{{deleteDeploymentNamespace}}</i></b>?</p>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" ng-click="delete()" data-dismiss="modal">Confirm</button>
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="delete()" data-dismiss="modal">Confirm</button>
 				</div>
 			</div>
 		</div>
@@ -134,17 +134,17 @@
 	<script type="text/javascript">
 		angular.module('page', ['ngAnimate', 'ui.bootstrap']);
 		angular.module('page').controller('LandscapeController', function ($scope, $http) {
+			$scope.deploymentData = {
+				'name': null,
+				'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
+				'replicas': 1,
+				'env': []
+			};
+
 			loadDeployments();
 
-			$scope.create = function(name) {
-				$scope.deploymentName = null;
-				var data = {
-					'name': name,
-					'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
-					'replicas': 1,
-					'env': []
-				};
-				$http.post('../../../js/zeus/api/deployments.js?namespace=dev-account', data).success(function(deployment){
+			$scope.create = function() {
+				$http.post('../../../js/zeus/api/deployments.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function(deployment){
 					loadDeployments();
 					$.notify({
 							message: '<b>\'' + deployment.metadata.name + '\'</b> was deployed'
@@ -160,6 +160,7 @@
 						}
 					);
 				});
+				$scope.deploymentData.name = null;
 			};
 
 			$scope.setToBeDeleted = function(deployment) {
