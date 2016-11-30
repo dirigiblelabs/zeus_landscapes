@@ -10,11 +10,24 @@
 <title>Deployments</title>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <link rel="stylesheet" href="../../registry/scripts/animate.min.css">
 <style>
 .selected-true {
 	background-color: #428bca;
 	color: white;
+}
+
+.hover-btn {
+	/*
+	position: absolute;
+	right: 15px;
+	*/
+	display: none;
+}
+    
+.row:hover .hover-btn {
+	display: block;
 }
 </style>
 <style type="text/css">
@@ -40,47 +53,73 @@
 		</div>
 		<div class="container">
 			<!-- Button trigger modal -->
-			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#myModal">+ CREATE</button>
+			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#dialogCreateDeployment">+ CREATE</button>
 			<table class="table table-condensed">
 				<thead>
 					<tr>
 						<th>Namespace</th>
 						<th>Name</th>
 						<th>Image</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr class="selected-{{entry._selected_}}" ng-repeat="entry in data" ng-click="showInfoForEntry(entry)">
-						<td>{{entry.metadata.namespace}}</td>
-						<td>{{entry.metadata.name}}</td>
-						<td><span ng-repeat="container in entry.spec.template.spec.containers">{{container.image}}<span></td>
+					<tr ng-repeat="entry in data" ng-click="showInfoForEntry(entry)">
+						<td class="text-muted">{{entry.metadata.namespace}}</td>
+						<td class="text-primary">{{entry.metadata.name}}</td>
+						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
+						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
 	</div>
 
-	<!-- Modal -->
-	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	  <div class="modal-dialog" role="document">
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-	          <span aria-hidden="true">&times;</span>
-	        </button>
-	        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
-	      </div>
-	      <div class="modal-body">
-	      	<p>Name:</p>
-	      	<input type="text" class="form-control" ng-model="deploymentName">
-	      </div>
-	      <div class="modal-footer">
-	        <button type="button" class="btn btn-primary" ng-click="create(deploymentName)" data-dismiss="modal">Deploy</button>
-	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-	      </div>
-	    </div>
-	  </div>
+	<!-- Create Dialog -->
+	<div class="modal fade" id="dialogCreateDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogCreateDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogCreateDeploymentLabel">Create Deployment</h4>
+				</div>
+				<div class="modal-body">
+					<p>Name:</p>
+					<input type="text" class="form-control" ng-model="deploymentName">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="create(deploymentName)" data-dismiss="modal">Deploy</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
 	</div>
+	<!-- End Create Dialog -->
+
+	<!-- Delete Dialog -->
+	<div class="modal fade" id="dialogDeleteDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogDeleteDeploymentLabel">Delete a Deployment</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to delete Deployment <b><i>{{deleteDeploymentName}}</i></b> in namespace <b><i>{{deleteDeploymentNamespace}}</i></b>?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="delete()" data-dismiss="modal">Confirm</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Delete Dialog -->
+
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
@@ -113,6 +152,34 @@
 							type: "success"
 						}
 					);
+				}).error(function(errorMessage) {
+					$.notify({
+							message: '<b>Error</b>: ' + errorMessage.message
+						}, {
+							type: "danger"
+						}
+					);
+				});
+			};
+
+			$scope.setToBeDeleted = function(deployment) {
+				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
+				$scope.deleteDeploymentName = deployment.metadata.name;
+			}
+
+			$scope.delete = function() {
+				var namespace = $scope.deleteDeploymentNamespace;
+				var name = $scope.deleteDeploymentName;
+				$http.delete('../../../js/zeus/api/deployments.js?namespace=' + namespace + '&name=' + name).success(function(deployment){
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
+						}, {
+							type: "success"
+						}
+					);
+					$scope.deleteDeploymentNamespace = null;
+					$scope.deleteDeploymentName = null;
 				}).error(function(errorMessage) {
 					$.notify({
 							message: '<b>Error</b>: ' + errorMessage.message
