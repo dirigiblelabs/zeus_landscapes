@@ -66,7 +66,8 @@
 				<tbody>
 					<tr ng-repeat="entry in data" ng-click="showInfoForEntry(entry)">
 						<td class="text-muted">{{entry.metadata.namespace}}</td>
-						<td class="text-primary">{{entry.metadata.name}}</td>
+						<td ng-show="entry.url"><a href="{{entry.url}}" target="_blank">{{entry.metadata.name}}</a></td>
+						<td ng-hide="entry.url">{{entry.metadata.name}}</td>
 						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
 						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
 					</tr>
@@ -144,15 +145,27 @@
 			loadDeployments();
 
 			$scope.create = function() {
-				$http.post('../../../js/zeus/api/deployments.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function(deployment){
-					loadDeployments();
-					$.notify({
-							message: '<b>\'' + deployment.metadata.name + '\'</b> was deployed'
+				$http.post('../../../js/zeus/api/deployments.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function(deployment) {
+					$http.post('../../../js/zeus/api/services.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function() {
+						loadDeployments();
+						clearDeployName();
+						$.notify({
+								message: '<b>\'' + deployment.metadata.name + '\'</b> was registered'
+							}, {
+								type: "success"
+							}
+						);
+					}).error(function(errorMessage) {
+						clearDeployName();
+						$.notify({
+							message: '<b>Error</b>: ' + errorMessage.message
 						}, {
-							type: "success"
-						}
-					);
-				}).error(function(errorMessage) {
+							type: "danger"
+						});
+					});
+				})
+				.error(function(errorMessage) {
+					clearDeployName();
 					$.notify({
 							message: '<b>Error</b>: ' + errorMessage.message
 						}, {
@@ -160,8 +173,11 @@
 						}
 					);
 				});
-				$scope.deploymentData.name = null;
 			};
+
+			function clearDeployName() {
+				$scope.deploymentData.name = null;
+			}
 
 			$scope.setToBeDeleted = function(deployment) {
 				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
@@ -171,16 +187,18 @@
 			$scope.delete = function() {
 				var namespace = $scope.deleteDeploymentNamespace;
 				var name = $scope.deleteDeploymentName;
-				$http.delete('../../../js/zeus/api/deployments.js?namespace=' + namespace + '&name=' + name).success(function(deployment){
-					loadDeployments();
-					$.notify({
-							message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
-						}, {
-							type: "success"
-						}
-					);
-					$scope.deleteDeploymentNamespace = null;
-					$scope.deleteDeploymentName = null;
+				$http.delete('../../../js/zeus/api/deployments.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
+					$http.delete('../../../js/zeus/api/services.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
+						loadDeployments();
+						$.notify({
+								message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
+							}, {
+								type: "success"
+							}
+						);
+						$scope.deleteDeploymentNamespace = null;
+						$scope.deleteDeploymentName = null;
+					});
 				}).error(function(errorMessage) {
 					$.notify({
 							message: '<b>Error</b>: ' + errorMessage.message
@@ -192,8 +210,18 @@
 			};
 
 			function loadDeployments() {
-				$http.get('../../../js/zeus/api/deployments.js?namespace=dev-account').success(function(data){
+				$http.get('../../../js/zeus/api/deployments.js?namespace=dev-account').success(function(data) {
 					$scope.data = data;
+					$http.get('../../../js/zeus/api/services.js?namespace=dev-account').success(function(servicesData) {
+						for (var i = 0 ; i < servicesData.length; i++) {
+							for (var j = 0 ; j < $scope.data.length; j++) {
+								if (servicesData[i].metadata.namespace === $scope.data[j].metadata.namespace
+									&& servicesData[i].metadata.name === $scope.data[j].metadata.name) {
+									$scope.data[j].url = 'http://192.168.99.100:' + servicesData[i].spec.ports[0].nodePort;
+								}
+							}
+						}
+					});
 				});
 			}
 		});
