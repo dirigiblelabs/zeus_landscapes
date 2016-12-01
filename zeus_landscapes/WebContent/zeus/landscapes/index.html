@@ -42,7 +42,8 @@
 					<tr>
 						<th>Namespace</th>
 						<th>Name</th>
-						<th>Image</th>
+						<th>Replicas</th>
+						<th>Images</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -51,6 +52,7 @@
 						<td class="text-muted">{{entry.metadata.namespace}}</td>
 						<td ng-show="entry.url"><a href="{{entry.url}}" target="_blank">{{entry.metadata.name}}</a></td>
 						<td ng-hide="entry.url">{{entry.metadata.name}}</td>
+						<td class="text-muted">{{entry.status.updatedReplicas}}/{{entry.status.replicas}}</td>
 						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
 						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
 					</tr>
@@ -123,7 +125,10 @@
 				'name': null,
 				'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
 				'replicas': 1,
-				'env': []
+				'env': [{
+					'name': 'DefaultDB_username',
+					'value': 'root'
+				}]
 			};
 
 			loadDeployments();
