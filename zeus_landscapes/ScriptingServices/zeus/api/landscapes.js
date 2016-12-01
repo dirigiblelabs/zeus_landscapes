@@ -7,6 +7,7 @@ var xss = require('utils/xss');
 var env = require('core/env');
 var deploymentsLib = require('zeus/api/libs/deployments');
 var servicesLib = require('zeus/api/libs/services');
+var replicasetsLib = require('zeus/api/libs/replicasets');
 
 var IP = env.get('zeus.landscapes.ip');
 var HOST = env.get('zeus.landscapes.host');
@@ -120,6 +121,16 @@ function handleDeleteRequest(httpRequest, httpResponse, xss) {
 			var service = servicesLib.delete(HOST, TOKEN, namespace, name);
 			entity.service = service;
 			status = service.code ? service.code : httpResponse.OK;
+			var replicasets = replicasetsLib.list(HOST, TOKEN, namespace);
+			for (var i = 0; i < replicasets.length; i ++) {
+				if (replicasets[i].metadata.labels.application === name) {
+					var replicaset = replicasetsLib.delete(HOST, TOKEN, namespace, replicasets[i].metadata.name);
+					entity.replicaset = replicaset;
+					if (status === httpResponse.OK) {
+						status = replicaset.code ? replicaset.code : httpResponse.OK;
+					}
+				}
+			}
 		}
 		sendResponse(httpResponse, status, 'application/json', JSON.stringify(entity));
 	} else {
