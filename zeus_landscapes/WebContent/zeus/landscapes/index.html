@@ -118,6 +118,7 @@
 	<script type="text/javascript">
 		angular.module('page', ['ngAnimate', 'ui.bootstrap']);
 		angular.module('page').controller('LandscapeController', function ($scope, $http) {
+			$scope.namespace = 'dev-account';
 			$scope.deploymentData = {
 				'name': null,
 				'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
@@ -128,39 +129,23 @@
 			loadDeployments();
 
 			$scope.create = function() {
-				$http.post('../../../js/zeus/api/deployments.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function(deployment) {
-					$http.post('../../../js/zeus/api/services.js?namespace=dev-account', JSON.stringify($scope.deploymentData)).success(function() {
-						loadDeployments();
-						clearDeployName();
-						$.notify({
-								message: '<b>\'' + deployment.metadata.name + '\'</b> was registered'
-							}, {
-								type: "success"
-							}
-						);
-					}).error(function(errorMessage) {
-						clearDeployName();
-						$.notify({
-							message: '<b>Error</b>: ' + errorMessage.message
-						}, {
-							type: "danger"
-						});
-					});
-				})
-				.error(function(errorMessage) {
-					clearDeployName();
+				$http.post('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace, JSON.stringify($scope.deploymentData)).success(function(data) {
+					loadDeployments();
 					$.notify({
-							message: '<b>Error</b>: ' + errorMessage.message
+							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was registered'
 						}, {
-							type: "danger"
+							type: "success"
 						}
 					);
+				}).error(function(errorMessage) {
+					$.notify({
+						message: '<b>Error</b>: ' + errorMessage.message
+					}, {
+						type: "danger"
+					});
 				});
-			};
-
-			function clearDeployName() {
 				$scope.deploymentData.name = null;
-			}
+			};
 
 			$scope.setToBeDeleted = function(deployment) {
 				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
@@ -170,18 +155,14 @@
 			$scope.delete = function() {
 				var namespace = $scope.deleteDeploymentNamespace;
 				var name = $scope.deleteDeploymentName;
-				$http.delete('../../../js/zeus/api/deployments.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
-					$http.delete('../../../js/zeus/api/services.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
-						loadDeployments();
-						$.notify({
-								message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
-							}, {
-								type: "success"
-							}
-						);
-						$scope.deleteDeploymentNamespace = null;
-						$scope.deleteDeploymentName = null;
-					});
+				$http.delete('../../../js/zeus/api/landscapes.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
+						}, {
+							type: "success"
+						}
+					);
 				}).error(function(errorMessage) {
 					$.notify({
 							message: '<b>Error</b>: ' + errorMessage.message
@@ -193,18 +174,8 @@
 			};
 
 			function loadDeployments() {
-				$http.get('../../../js/zeus/api/deployments.js?namespace=dev-account').success(function(data) {
+				$http.get('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace).success(function(data) {
 					$scope.data = data;
-					$http.get('../../../js/zeus/api/services.js?namespace=dev-account').success(function(servicesData) {
-						for (var i = 0 ; i < servicesData.length; i++) {
-							for (var j = 0 ; j < $scope.data.length; j++) {
-								if (servicesData[i].metadata.namespace === $scope.data[j].metadata.namespace
-									&& servicesData[i].metadata.name === $scope.data[j].metadata.name) {
-									$scope.data[j].url = 'http://192.168.99.100:' + servicesData[i].spec.ports[0].nodePort;
-								}
-							}
-						}
-					});
 				});
 			}
 		});
