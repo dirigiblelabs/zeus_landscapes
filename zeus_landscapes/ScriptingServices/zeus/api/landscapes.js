@@ -101,7 +101,7 @@ function handlePostRequest(httpRequest, httpResponse) {
 		entity.service = service;
 		status = service.code ? service.code : httpResponse.OK;
 	}
-	if (body.autoscale) {
+	if (body.autoscale && body.autoscale.enabled) {
 		var minReplicas = body.autoscale.minReplicas ? body.autoscale.minReplicas : 1;
 		var maxReplicas = body.autoscale.maxReplicas ? body.autoscale.maxReplicas : 3;
 		var targetCPUUtilizationPercentage = body.autoscale.targetCPUUtilizationPercentage ? body.autoscale.targetCPUUtilizationPercentage : 50;
