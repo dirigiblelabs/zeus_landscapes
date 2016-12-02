@@ -110,6 +110,11 @@ function getDeploymentBody(namespace, application, replicas, image, env) {
 	                                "protocol": "TCP"
 	                            }
 	                        ],
+	                        "resources": {
+	                        	"requests": {
+	                        		"cpu": "200m"
+	                        	}
+	                        },
 	                    	"env": env
 	                    }
 	                ]

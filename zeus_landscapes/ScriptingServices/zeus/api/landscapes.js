@@ -8,6 +8,7 @@ var env = require('core/env');
 var deploymentsLib = require('zeus/api/libs/deployments');
 var servicesLib = require('zeus/api/libs/services');
 var replicasetsLib = require('zeus/api/libs/replicasets');
+var autoscaleLib = require('zeus/api/libs/autoscale');
 
 var IP = env.get('zeus.landscapes.ip');
 var HOST = env.get('zeus.landscapes.host');
@@ -100,6 +101,12 @@ function handlePostRequest(httpRequest, httpResponse) {
 		entity.service = service;
 		status = service.code ? service.code : httpResponse.OK;
 	}
+	if (body.autoscale) {
+		var minReplicas = body.autoscale.minReplicas ? body.autoscale.minReplicas : 1;
+		var maxReplicas = body.autoscale.maxReplicas ? body.autoscale.maxReplicas : 3;
+		var targetCPUUtilizationPercentage = body.autoscale.targetCPUUtilizationPercentage ? body.autoscale.targetCPUUtilizationPercentage : 50;
+		autoscaleLib.create(HOST, TOKEN, namespace, name, minReplicas, maxReplicas, targetCPUUtilizationPercentage);
+	}
 
 	sendResponse(httpResponse, status, 'application/json', JSON.stringify(entity));
 }
@@ -130,6 +137,10 @@ function handleDeleteRequest(httpRequest, httpResponse, xss) {
 						status = replicaset.code ? replicaset.code : httpResponse.OK;
 					}
 				}
+			}
+			var autoscale = autoscaleLib.delete(HOST, TOKEN, namespace, name);
+			if (status === httpResponse.OK) {
+				status = autoscale.code ? autoscale.code : httpResponse.OK;
 			}
 		}
 		sendResponse(httpResponse, status, 'application/json', JSON.stringify(entity));
