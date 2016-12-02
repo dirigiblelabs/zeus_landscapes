@@ -139,7 +139,7 @@ function handleDeleteRequest(httpRequest, httpResponse, xss) {
 				}
 			}
 			var autoscale = autoscaleLib.delete(HOST, TOKEN, namespace, name);
-			if (status === httpResponse.OK) {
+			if (status === httpResponse.OK && autoscale.code !== httpResponse.NOT_FOUND) {
 				status = autoscale.code ? autoscale.code : httpResponse.OK;
 			}
 		}
