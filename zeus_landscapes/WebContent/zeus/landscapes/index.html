@@ -45,6 +45,7 @@
 						<th>Replicas</th>
 						<th>Images</th>
 						<th></th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -54,6 +55,7 @@
 						<td ng-hide="entry.url">{{entry.metadata.name}}</td>
 						<td class="text-muted">{{entry.status.availableReplicas}}/{{entry.status.replicas}}</td>
 						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
+						<td><button type="button" class="close" ng-click="setToBeEdited(entry)" data-toggle="modal" data-target="#dialogEditDeployment"><i class="fa fa-edit"></i></button></td>
 						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
 					</tr>
 				</tbody>
@@ -117,6 +119,62 @@
 	</div>
 	<!-- End Create Dialog -->
 
+	<!-- Edit Dialog -->
+	<div class="modal fade" id="dialogEditDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogEditDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogEditDeploymentLabel">Edit Deployment</h4>
+				</div>
+				<div class="modal-body">
+
+					<div class="form-group row">
+					  <label class="col-xs-3 col-form-label">Name</label>
+					  <div class="col-xs-9">
+					    <input class="form-control" type="text" placeholder="Deployment Name" ng-model="editDeploymentData.name">
+					  </div>
+					</div>
+					<div class="form-check row">
+					  <label class="col-xs-3 col-form-label">Auto-Scale</label>
+					  <div class="col-xs-9">
+					    <input class="form-check-input" type="checkbox" placeholder="Deployment Name" ng-model="editDeploymentData.autoscale.enabled">
+					  </div>
+					</div>
+
+					<div ng-show="editDeploymentData.autoscale.enabled">
+						<hr>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">CPU %</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="CPU %" ng-model="editDeploymentData.autoscale.targetCPUUtilizationPercentage">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Min</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Min Replicas" ng-model="editDeploymentData.autoscale.minReplicas">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Max</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Max Replicas" ng-model="editDeploymentData.autoscale.maxReplicas">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="update()" data-dismiss="modal">Update</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Edit Dialog -->
+
 	<!-- Delete Dialog -->
 	<div class="modal fade" id="dialogDeleteDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteDeploymentLabel" aria-hidden="true">
 		<div class="modal-dialog" role="document">
@@ -170,6 +228,20 @@
 				}
 			};
 
+			$scope.editDeploymentData = {
+				'name': null,
+				'env': [{
+					'name': 'DefaultDB_username',
+					'value': 'root'
+				}],
+				'autoscale': {
+					'enabled': false,
+					'minReplicas': 1,
+					'maxReplicas': 5,
+					'targetCPUUtilizationPercentage': 50
+				}
+			};
+
 			loadDeployments();
 
 			$scope.create = function() {
@@ -194,10 +266,24 @@
 				$scope.deploymentData.autoscale.maxReplicas = 5;
 			};
 
-			$scope.setToBeDeleted = function(deployment) {
-				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
-				$scope.deleteDeploymentName = deployment.metadata.name;
-			}
+			$scope.update = function() {
+				$http.put('../../../js/zeus/api/landscapes.js?namespace=' + $scope.editDeploymentNamespace + '&name=' + $scope.editDeploymentName, JSON.stringify($scope.editDeploymentData)).success(function(data) {
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was updated'
+						}, {
+							type: "success"
+						}
+					);
+				}).error(function(errorMessage) {
+					$.notify({
+						message: '<b>Error</b>: ' + errorMessage.message
+					}, {
+						type: "danger"
+					});
+				});
+				$scope.editDeploymentData = null;
+			};
 
 			$scope.delete = function() {
 				var namespace = $scope.deleteDeploymentNamespace;
@@ -218,6 +304,17 @@
 						}
 					);
 				});
+			};
+
+			$scope.setToBeEdited = function(deployment) {
+				$scope.editDeploymentData.name = deployment.metadata.name;
+				$scope.editDeploymentNamespace = deployment.metadata.namespace;
+				$scope.editDeploymentName = deployment.metadata.name;
+			};
+
+			$scope.setToBeDeleted = function(deployment) {
+				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
+				$scope.deleteDeploymentName = deployment.metadata.name;
 			};
 
 			function loadDeployments() {
