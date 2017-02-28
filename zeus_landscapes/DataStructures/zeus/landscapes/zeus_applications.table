@@ -1,0 +1,32 @@
+{
+  "tableName":"zeus_applications",
+  "columns":
+    [
+      {
+        "name":"APPLICATION_ID",
+        "type":"INTEGER",
+        "length":"0",
+        "notNull":"true",
+        "primaryKey":"true",
+        "defaultValue":""
+      }
+      ,
+      {
+        "name":"APPLICATION_NAME",
+        "type":"VARCHAR",
+        "length":"50",
+        "notNull":"true",
+        "primaryKey":"false",
+        "defaultValue":""
+      }
+      ,
+      {
+        "name":"APPLICATION_TEMPLATE_ID",
+        "type":"INTEGER",
+        "length":"0",
+        "notNull":"true",
+        "primaryKey":"false",
+        "defaultValue":""
+      }
+    ]
+}

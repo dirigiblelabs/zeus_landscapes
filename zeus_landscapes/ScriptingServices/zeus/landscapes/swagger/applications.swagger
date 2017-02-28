@@ -1,0 +1,194 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "0.0.0",
+        "title": "Zeus_applications Entity Service",
+        "description":"This is a RESTful web service for listing, viewing and managing entities of the type 'Zeus_applications'"
+    },
+    "basePath":"/services",
+    "tags":[
+      {
+         "name":"Zeus_applications",
+         "description":"View and manage Zeus_applications objects"
+      }
+    ],
+    "paths": {
+        "/js/zeus/landscapes/applications.js": {
+            "get": {
+            	"tags":[
+               		"Zeus_applications"
+            	],
+                "description": "Gets 'Zeus_applications' objects.\n",
+                "parameters": [
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "description": "Count of all the records",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "application_id",
+                        "in": "query",
+                        "description": "Identifier of the 'Zeus_applications' object",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "metadata",
+                        "in": "query",
+                        "description": "Metadata of the 'Zeus_applications' object",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Limit of the objects list",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Offset of the objects list",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sort parameter",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "desc",
+                        "in": "query",
+                        "description": "Descending order",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema":{
+		                     "$ref":"#/definitions/Zeus_applications"
+                        }
+                    }
+                }
+            },
+            "post": {
+            	"tags":[
+               		"Zeus_applications"
+            	],
+                "description": "Creates a new 'Zeus_applications' object.\n",
+                "consumes":[
+	               "application/json"
+	            ],
+	            "produces":[
+	               "plain/text"
+	            ],
+	            "parameters":[
+	               {
+	                  "in":"body",
+	                  "name":"body",
+	                  "description":"Zeus_applications object that needs to be added",
+	                  "required":true,
+	                  "schema":{
+	                     "$ref":"#/definitions/Zeus_applications"
+	                  }
+	               }
+	            ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema":{
+		                     "$ref":"#/definitions/Zeus_applications"
+                        }
+                    }
+                }
+            },
+            "put": {
+            	"tags":[
+               		"Zeus_applications"
+            	],
+                "description": "Updates an existing 'Zeus_applications' object.\n",
+                "consumes":[
+	               "application/json"
+	            ],
+	            "produces":[
+	               "plain/text"
+	            ],
+	            "parameters":[
+	               {
+	                  "in":"body",
+	                  "name":"body",
+	                  "description":"Zeus_applications object that needs to be added",
+	                  "required":true,
+	                  "schema":{
+	                     "$ref":"#/definitions/Zeus_applications"
+	                  }
+	               }
+	            ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema":{
+		                     "$ref":"#/definitions/Zeus_applications"
+                        }
+                    }
+                }
+            },
+            "delete": {
+            	"tags":[
+               		"Zeus_applications"
+            	],
+                "description": "Deletes 'Zeus_applications' objects.\n",
+                "parameters": [
+                    {
+                        "name": "application_id",
+                        "in": "query",
+                        "description": "Identifier of the 'Zeus_applications' object",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema":{
+		                     "$ref":"#/definitions/Zeus_applications"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions":{
+        "Zeus_applications": {
+	        "type":"object",
+	        "properties": {
+        		"application_id": {
+	            	"type": 
+        "integer"
+	    		}
+				,
+        		"application_name": {
+	            	"type": 
+        "string"
+	    		}
+				,
+        		"application_template_id": {
+	            	"type": 
+        "integer"
+	    		}
+	        }
+        }
+	}
+}

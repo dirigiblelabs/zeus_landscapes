@@ -1,328 +1,564 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="page">
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="">
-<meta name="author" content="">
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="">
+	<meta name="author" content="">
 
-<title>Deployments</title>
+	<title>Deployments</title>
 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<link rel="stylesheet" href="scripts/animate.min.css">
-<style>
-.selected-true {
-	background-color: #428bca;
-	color: white;
-}
-
-.hover-btn {
-	display: none;
-}
-    
-.row:hover .hover-btn {
-	display: block;
-}
-</style>
-</head>
-<body ng-controller="LandscapeController">
-	<div id="wrap">
-		<div class="row">
-			<div class="col-lg-12">
-		    	<h1 class="page-header">Deployments</h1>
-			</div>
-		</div>
-		<div class="container">
-			<!-- Button trigger modal -->
-			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#dialogCreateDeployment"><i class="fa fa-plus"></i> CREATE</button>
-			<table class="table table-condensed">
-				<thead>
-					<tr>
-						<th>Namespace</th>
-						<th>Name</th>
-						<th>Replicas</th>
-						<th>Images</th>
-						<th></th>
-						<th></th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="entry in data" ng-click="showInfoForEntry(entry)">
-						<td class="text-muted">{{entry.metadata.namespace}}</td>
-						<td ng-show="entry.url"><a href="{{entry.url}}" target="_blank">{{entry.metadata.name}}</a></td>
-						<td ng-hide="entry.url">{{entry.metadata.name}}</td>
-						<td class="text-muted">{{entry.status.availableReplicas}}/{{entry.status.replicas}}</td>
-						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
-						<td><button type="button" class="close" ng-click="setToBeEdited(entry)" data-toggle="modal" data-target="#dialogEditDeployment"><i class="fa fa-edit"></i></button></td>
-						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-
-	<!-- Create Dialog -->
-	<div class="modal fade" id="dialogCreateDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogCreateDeploymentLabel" aria-hidden="true">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<h4 class="modal-title" id="dialogCreateDeploymentLabel">Create Deployment</h4>
-				</div>
-				<div class="modal-body">
-
-					<div class="form-group row">
-					  <label class="col-xs-3 col-form-label">Name</label>
-					  <div class="col-xs-9">
-					    <input class="form-control" type="text" placeholder="Deployment Name" ng-model="deploymentData.name">
-					  </div>
-					</div>
-					<div class="form-check row">
-					  <label class="col-xs-3 col-form-label">Auto-Scale</label>
-					  <div class="col-xs-9">
-					    <input class="form-check-input" type="checkbox" placeholder="Deployment Name" ng-model="deploymentData.autoscale.enabled">
-					  </div>
-					</div>
-
-					<div ng-show="deploymentData.autoscale.enabled">
-						<hr>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">CPU %</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="CPU %" ng-model="deploymentData.autoscale.targetCPUUtilizationPercentage">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">Min</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="Min Replicas" ng-model="deploymentData.autoscale.minReplicas">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">Max</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="Max Replicas" ng-model="deploymentData.autoscale.maxReplicas">
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" ng-click="create()" data-dismiss="modal">Deploy</button>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- End Create Dialog -->
-
-	<!-- Edit Dialog -->
-	<div class="modal fade" id="dialogEditDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogEditDeploymentLabel" aria-hidden="true">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<h4 class="modal-title" id="dialogEditDeploymentLabel">Edit Deployment</h4>
-				</div>
-				<div class="modal-body">
-
-					<div class="form-group row">
-					  <label class="col-xs-3 col-form-label">Name</label>
-					  <div class="col-xs-9">
-					    <input class="form-control" type="text" placeholder="Deployment Name" ng-model="editDeploymentData.name">
-					  </div>
-					</div>
-					<div class="form-check row">
-					  <label class="col-xs-3 col-form-label">Auto-Scale</label>
-					  <div class="col-xs-9">
-					    <input class="form-check-input" type="checkbox" placeholder="Deployment Name" ng-model="editDeploymentData.autoscale.enabled">
-					  </div>
-					</div>
-
-					<div ng-show="editDeploymentData.autoscale.enabled">
-						<hr>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">CPU %</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="CPU %" ng-model="editDeploymentData.autoscale.targetCPUUtilizationPercentage">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">Min</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="Min Replicas" ng-model="editDeploymentData.autoscale.minReplicas">
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-xs-3 col-form-label">Max</label>
-							<div class="col-xs-9">
-								<input class="form-control" type="number" placeholder="Max Replicas" ng-model="editDeploymentData.autoscale.maxReplicas">
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" ng-click="update()" data-dismiss="modal">Update</button>
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- End Edit Dialog -->
-
-	<!-- Delete Dialog -->
-	<div class="modal fade" id="dialogDeleteDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteDeploymentLabel" aria-hidden="true">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
-					<h4 class="modal-title" id="dialogDeleteDeploymentLabel">Delete a Deployment</h4>
-				</div>
-				<div class="modal-body">
-					<p>Are you sure you want to delete Deployment <b><i>{{deleteDeploymentName}}</i></b> in namespace <b><i>{{deleteDeploymentNamespace}}</i></b>?</p>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					<button type="button" class="btn btn-primary" ng-click="delete()" data-dismiss="modal">Confirm</button>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- End Delete Dialog -->
-
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="/services/web/resources/css/forms.css">
+	<script src="/services/web/resources/themes/theme.js"></script>
+</head>
+<body ng-controller="ListController">
+
+		<div id="wrap">
+		
+			<div class="row">
+				<div class="col-lg-12">
+			    	<h1 class="page-header">Application Deployments</h1>
+				</div>
+				
+			</div>
+			
+			<div class="container">
+				<button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#dialogStartApplication">Start Application</button>
+				<table class="table table-condensed table-striped">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Name</th>
+							<th>Template</th>
+							<th>Deployments</th>
+							<th>Services</th>
+							<th>Ingresses</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr ng-repeat="entry in data">
+							<td>{{entry.application_id}}</td>
+							<td>{{entry.application_name}}</td>
+							<td><a href="../templates/applications.html">{{getApplicationTemplateName(entry.application_template_id)}}</a></td>
+							<td><button type="button" class="btn btn-xs btn-default" href="#" ng-click="getApplicationDeployments(entry.application_name)" data-toggle="modal" data-target="#dialogApplicationDeployments"><i class="fa fa-cubes"></i> Deployments</button></td>
+							<td><button type="button" class="btn btn-xs btn-primary" href="#" ng-application_click="getApplicationServices(entry.name)" data-toggle="modal" data-target="#dialogApplicationServices"><i class="fa fa-external-link"></i> Services</button></td>
+							<td><button type="button" class="btn btn-xs btn-danger" href="#" ng-click="getApplicationIngresses(entry.application_name)" data-toggle="modal" data-target="#dialogApplicationIngresses"><i class="fa fa-cloud"></i> Ingresses</button></td>
+							<td>
+								<button type="button" class="btn btn-xs btn-default btn-danger" ng-click="setApplicationToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteApplication"><i class="fa fa-remove"></i></button></i>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<div>
+					<div>View <select ng-model="viewby" ng-change="setItemsPerPage(viewby)"><option>10</option><option>20</option><option>50</option><option selected>100</option></select> records.<div>
+		    		<uib-pagination total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()" class="pagination-sm" items-per-page="itemsPerPage" max-size="maxSize" boundary-links="true" force-ellipses="true" rotate="false"></uib-pagination>
+				</div>
+			</div>
+		</div>
+
+	<!-- Start Application Dialog -->
+	<div class="modal fade" id="dialogStartApplication" tabindex="-1" role="dialog" aria-labelledby="dialogStartApplicationLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogStartApplicationLabel">Start Application</h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Name</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Application Name" ng-model="newApplication.name" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Template</label>
+						<div class="col-xs-9">
+							<select class="form-control" ng-model="newApplication.applicationTemplateId" ng-options="option.id as option.name for option in applicationTemplates" required="required"></select>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="startApplication()" data-dismiss="modal">Start</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Start Application Dialog -->
+
+
+	<!-- Remove Application Dialog -->
+	<div class="modal fade" id="dialogDeleteApplication" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteApplicationLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogDeleteApplicationLabel">Remove Application</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to application <b>[<i>{{applicationToBeDeleted.name}}</i>]</b>?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="removeApplication()" data-dismiss="modal">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Remove Application Dialog -->
+	
+	<!-- Application - Deployments Dialog -->
+	<div class="modal fade" id="dialogApplicationDeployments" tabindex="-1" role="dialog" aria-labelledby="dialogApplicationDeploymentsLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogApplicationDeploymentsLabel">Application - Deployments</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table table-condensed table-striped">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Name</th>
+								<th>Replicas</th>
+								<th>Template</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="entry in deploymentsData">
+								<td>{{entry.id}}</td>
+								<td>{{entry.metadata.name}}</td>
+								<td>{{entry.spec.replicas}}</td>
+								<td><a href="application_templates.html">{{entry.metadata.labels.deploymentTemplateName}}</a></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Application - Deployments Dialog -->
+
+	<!-- Application - Services Dialog -->
+	<div class="modal fade" id="dialogApplicationServices" tabindex="-1" role="dialog" aria-labelledby="dialogApplicationServicesLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogApplicationServicesLabel">Application - Services</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table table-condensed table-striped">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Name</th>
+								<th>Server</th>
+								<th>Port</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="entry in servicesData">
+								<td "col-md-1">{{$index + 1}}</td>
+								<td "col-md-2">{{entry.metadata.name}}</td>
+								<td "col-md-4"><a href="{{entry.server}}">{{entry.server}}</a></td>
+								<td "col-md-1">{{entry.spec.ports[0].nodePort}}</td>
+								<td class="col-md-2">
+									<button type="button" class="btn btn-xs btn-default btn-primary" style="margin-right:5%" ng-click="setServiceToBeUpdated(entry)" data-toggle="modal" data-target="#dialogUpdateService"><i class="fa fa-edit"></i></button></i>
+									<button type="button" class="btn btn-xs btn-default btn-danger" ng-click="setServiceToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteService"><i class="fa fa-remove"></i></button></i>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#dialogAddApplicationService"><i class="fa fa-plus"></i> Add</button>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Application - Services Dialog -->
+
+	<!-- Remove Service Dialog -->
+	<div class="modal fade" id="dialogDeleteService" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteServiceLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogDeleteServiceLabel">Remove Service</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to remove Service <b>[<i>{{serviceToBeDeleted.metadata.name}}</i>]</b> from application <b>[<i>{{applicationName}}</i>]</b>?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="removeService()" data-dismiss="modal">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Remove Service Dialog -->
+
+	<!-- Application - Ingresses Dialog -->
+	<div class="modal fade" id="dialogApplicationIngresses" tabindex="-1" role="dialog" aria-labelledby="dialogApplicationIngressesLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogApplicationIngressesLabel">Application - Ingresses</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table table-condensed table-striped">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Name</th>
+								<th>Host</th>
+								<th>Path</th>
+								<th>Service</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="entry in ingressesData">
+								<td class="col-md-1">{{$index + 1}}</td>
+								<td class="col-md-2">{{entry.metadata.name}}</td>
+								<td class="col-md-4">{{entry.spec.rules[0].host}}</td>
+								<td class="col-md-1">{{entry.spec.rules[0].http.paths[0].path}}</td>
+								<td class="col-md-2">{{entry.spec.rules[0].http.paths[0].backend.serviceName}}</td>
+								<td class="col-md-2">
+									<button type="button" class="btn btn-xs btn-default btn-primary" style="margin-right:5%" ng-click="setIngressToBeUpdated(entry)" data-toggle="modal" data-target="#dialogUpdateIngress"><i class="fa fa-edit"></i></button></i>
+									<button type="button" class="btn btn-xs btn-default btn-danger" ng-click="setIngressToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteIngress"><i class="fa fa-remove"></i></button></i>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#dialogAddApplicationIngress"><i class="fa fa-plus"></i> Add</button>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Application - Ingresses Dialog -->
+
+	<!-- Remove Ingress Dialog -->
+	<div class="modal fade" id="dialogDeleteIngress" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteIngressLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogDeleteIngressLabel">Remove Ingress</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to remove Ingress <b>[<i>{{ingressToBeDeleted.metadata.name}}</i>]</b> from application <b>[<i>{{applicationName}}</i>]</b>?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="removeIngress()" data-dismiss="modal">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Remove Ingress Dialog -->
+
+	<!-- Application - Edit Ingress Dialog -->
+	<div class="modal fade" id="dialogUpdateIngress" tabindex="-1" role="dialog" aria-labelledby="dialogUpdateIngressLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogUpdateIngressLabel">Application - Edit Ingress</h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Name</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Ingress Name" ng-model="ingressToBeUpdated.updated.metadata.name" required="required" readonly>
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Sub-Domain</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Sub-Domain Name (*.apps.eu-central-1.hcp.onvms.com)" ng-model="ingressToBeUpdated.updated.spec.rules[0].host" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Path</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Ingress Path" ng-model="ingressToBeUpdated.updated.spec.rules[0].http.paths[0].path" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Service</label>
+						<div class="col-xs-9">
+							<select class="form-control" placeholder="Service" ng-model="ingressToBeUpdated.updated.spec.rules[0].http.paths[0].backend.serviceName" ng-options="option.metadata.name as option.metadata.name for option in servicesData" required="required"></select>	
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Port</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Service Port" ng-model="ingressToBeUpdated.updated.spec.rules[0].http.paths[0].backend.servicePort">
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="updateIngress()">Update</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Application - Edit Ingress Dialog -->
+
+	<!-- Application - Add Ingress Dialog -->
+	<div class="modal fade" id="dialogAddApplicationIngress" tabindex="-1" role="dialog" aria-labelledby="dialogAddApplicationIngressLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogAddApplicationIngressLabel">Application - Create Ingress</h4>
+				</div>
+				<div class="modal-body">
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Name</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Ingress Name" ng-model="ingressToBeAdded.name" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Sub-Domain</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Sub-Domain Name (*.apps.eu-central-1.dkom.onvms.com)" ng-model="ingressToBeAdded.subDomain" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Path</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Ingress Path" ng-model="ingressToBeAdded.path" required="required">
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Service</label>
+						<div class="col-xs-9">
+							<select class="form-control" placeholder="Service" ng-model="ingressToBeAdded.service" ng-options="option as option.metadata.name for option in servicesData" required="required"></select>	
+						</div>
+					</div>
+					<div class="form-group row">
+						<label class="col-xs-3 col-form-label">Port</label>
+						<div class="col-xs-9">
+							<input class="form-control" type="text" placeholder="Service Port" ng-model="ingressToBeAdded.service.spec.ports[0].port" readonly>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addIngress()">Add</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Application - Add Ingress Dialog -->
 
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-resource.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.min.js"></script>
 	<script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.3.js"></script>
 
-	<script src="scripts/bootstrap-notify.min.js"></script>
-
 	<script type="text/javascript">
 		angular.module('page', ['ngAnimate', 'ui.bootstrap']);
-		angular.module('page').controller('LandscapeController', function ($scope, $http) {
-			$scope.namespace = 'default';
-			$scope.deploymentData = {
-				'name': null,
-				'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
-				'replicas': 1,
-				'env': [{
-					'name': 'DefaultDB_username',
-					'value': 'root'
-				}],
-				'autoscale': {
-					'enabled': false,
-					'minReplicas': 1,
-					'maxReplicas': 5,
-					'targetCPUUtilizationPercentage': 50
+		angular.module('page').controller('ListController', function ($scope, $http) {
+			
+			const APPLCATIONS_URL = '../../../js/zeus/landscapes/applications.js';
+			const APPLICATION_TEMPLATES_URL = '../../../js/zeus/templates/application.js';
+			const DEPLOYER_URL = '../../../js/zeus/deployer.js';
+			const UNDEPLOYER_URL = '../../../js/zeus/undeployer.js';
+			const DEPLOYMENTS_URL = '../../../js/zeus/application/deployments.js';
+			const SERVICES_URL = '../../../js/zeus/application/services.js';
+			const INGRESSES_URL = '../../../js/zeus/application/ingresses.js';
+
+			loadApplications();
+
+			$http.get(APPLICATION_TEMPLATES_URL).success(function(applicationTemplates) {
+				$scope.applicationTemplates = applicationTemplates;
+			});
+
+			$scope.startApplication = function() {
+				$http.post(DEPLOYER_URL, $scope.newApplication).success(function() {
+					loadApplications();
+				});
+			};
+
+			$scope.setApplicationToBeDeleted = function(application) {
+				$scope.applicationToBeDeleted = application;
+			};
+
+			$scope.removeApplication = function() {
+				$http.delete(UNDEPLOYER_URL + '?applicationName=' + $scope.applicationToBeDeleted.name).success(function() {
+					loadApplications();
+				});
+			};
+
+			$scope.getApplicationTemplateName = function(applicationTemplateId) {
+				for (var i = 0 ; i < $scope.applicationTemplates.length; i ++) {
+					if ($scope.applicationTemplates[i].id === applicationTemplateId) {
+						return $scope.applicationTemplates[i].name;
+					}
 				}
+				return applicationTemplateId;
 			};
 
-			$scope.editDeploymentData = {
-				'name': null,
-				'env': [{
-					'name': 'DefaultDB_username',
-					'value': 'root'
-				}],
-				'autoscale': {
-					'enabled': false,
-					'minReplicas': 1,
-					'maxReplicas': 5,
-					'targetCPUUtilizationPercentage': 50
-				}
-			};
+			$scope.getApplicationDeployments = function(applicationName) {
+				$scope.applicationName = applicationName;
+				$scope.deploymentsData = [];
 
-			loadDeployments();
-
-			$scope.create = function() {
-				$http.post('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace, JSON.stringify($scope.deploymentData)).success(function(data) {
-					loadDeployments();
-					$.notify({
-							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was registered'
-						}, {
-							type: "success"
-						}
-					);
-				}).error(function(errorMessage) {
-					$.notify({
-						message: '<b>Error</b>: ' + errorMessage.message
-					}, {
-						type: "danger"
-					});
-				});
-				$scope.deploymentData.name = null;
-				$scope.deploymentData.autoscale.enabled = false;
-				$scope.deploymentData.autoscale.minReplicas = 1;
-				$scope.deploymentData.autoscale.maxReplicas = 5;
-			};
-
-			$scope.update = function() {
-				$http.put('../../../js/zeus/api/landscapes.js?namespace=' + $scope.editDeploymentNamespace + '&name=' + $scope.editDeploymentName, JSON.stringify($scope.editDeploymentData)).success(function(data) {
-					loadDeployments();
-					$.notify({
-							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was updated'
-						}, {
-							type: "success"
-						}
-					);
-				}).error(function(errorMessage) {
-					$.notify({
-						message: '<b>Error</b>: ' + errorMessage.message
-					}, {
-						type: "danger"
-					});
-				});
-				$scope.editDeploymentData = null;
-			};
-
-			$scope.delete = function() {
-				var namespace = $scope.deleteDeploymentNamespace;
-				var name = $scope.deleteDeploymentName;
-				$http.delete('../../../js/zeus/api/landscapes.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
-					loadDeployments();
-					$.notify({
-							message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
-						}, {
-							type: "success"
-						}
-					);
-				}).error(function(errorMessage) {
-					$.notify({
-							message: '<b>Error</b>: ' + errorMessage.message
-						}, {
-							type: "danger"
-						}
-					);
+				$http.get(DEPLOYMENTS_URL + '?applicationName=' + applicationName).success(function(deployments) {
+					$scope.deploymentsData = deployments;
 				});
 			};
 
-			$scope.setToBeEdited = function(deployment) {
-				$scope.editDeploymentData.name = deployment.metadata.name;
-				$scope.editDeploymentNamespace = deployment.metadata.namespace;
-				$scope.editDeploymentName = deployment.metadata.name;
+			$scope.getApplicationServices = function(applicationName) {
+				$scope.applicationName = applicationName;
+				$scope.servicesData = [];
+
+				$http.get(SERVICES_URL + '?applicationName=' + applicationName).success(function(services) {
+					$scope.servicesData = services;
+				});
 			};
 
-			$scope.setToBeDeleted = function(deployment) {
-				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
-				$scope.deleteDeploymentName = deployment.metadata.name;
+			$scope.setServiceToBeDeleted = function(service) {
+				$scope.serviceToBeDeleted = service;
 			};
 
-			function loadDeployments() {
-				$http.get('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace).success(function(data) {
+			$scope.removeService = function() {
+				$http.delete(SERVICES_URL + '?name=' + $scope.serviceToBeDeleted.metadata.name).success(function() {
+					$scope.getApplicationServices($scope.applicationName);
+				});
+			};
+
+			$scope.getApplicationIngresses = function(applicationName) {
+				$scope.applicationName = applicationName;
+				$scope.ingressesData = [];
+
+				$http.get(INGRESSES_URL + '?applicationName=' + applicationName).success(function(ingresses) {
+					$scope.ingressesData = ingresses;
+				});
+				$scope.getApplicationServices(applicationName);
+			};
+
+			$scope.addIngress = function() {
+				var ingress = {
+					'name': $scope.ingressToBeAdded.name,
+					'namespace': $scope.ingressToBeAdded.service.metadata.namespace,
+					'applicationName': $scope.applicationName,
+					'host': $scope.ingressToBeAdded.subDomain + '.apps.eu-central-1.dkom.onvms.com',
+					'path': $scope.ingressToBeAdded.path,
+					'serviceName': $scope.ingressToBeAdded.service.metadata.name,
+					'servicePort': $scope.ingressToBeAdded.service.spec.ports[0].port
+				};
+				$http.post(INGRESSES_URL, ingress).success(function() {
+					$scope.getApplicationIngresses($scope.applicationName);
+				});
+			};
+
+			$scope.setIngressToBeUpdated = function(ingress) {
+				$scope.ingressToBeUpdated = {
+					'old': ingress,
+					'updated': ingress
+				};
+			};
+
+			$scope.updateIngress = function() {
+				var ingress = $scope.ingressToBeUpdated.old;
+				ingress.spec.rules[0].host = $scope.ingressToBeUpdated.updated.spec.rules[0].host;
+				ingress.spec.rules[0].http.paths[0].path = $scope.ingressToBeUpdated.updated.spec.rules[0].http.paths[0].path;
+				ingress.spec.rules[0].http.paths[0].backend.serviceName = $scope.ingressToBeUpdated.updated.spec.rules[0].http.paths[0].backend.serviceName;
+				ingress.spec.rules[0].http.paths[0].backend.servicePort = parseInt($scope.ingressToBeUpdated.updated.spec.rules[0].http.paths[0].backend.servicePort);
+
+				$http.put(INGRESSES_URL + '?name=' + ingress.metadata.name, ingress).success(function() {
+					$scope.getApplicationIngresses($scope.applicationName);
+				});
+			};
+
+			$scope.setIngressToBeDeleted = function(ingress) {
+				$scope.ingressToBeDeleted = ingress;
+			};
+
+			$scope.removeIngress = function(){
+				$http.delete(INGRESSES_URL + '?name=' + $scope.ingressToBeDeleted.metadata.name).success(function() {
+					$scope.getApplicationIngresses($scope.applicationName);
+				});
+			};
+
+			function loadApplications() {
+				$http.get(APPLCATIONS_URL).success(function(data) {
 					$scope.data = data;
 				});
 			}
+
+			$scope.formats = ['yyyy/MM/dd', 'dd-MMMM-yyyy', 'dd.MM.yyyy', 'shortDate'];
+  			$scope.format = $scope.formats[0];
+		
+			// pagination
+			$scope.viewby = 100;
+			var urlCount = APPLCATIONS_URL + '?count';
+			$http.get(urlCount)
+				.success(function(count){
+					$scope.totalItems = count;
+				});
+				
+				$scope.currentPage = 1;
+				$scope.itemsPerPage = $scope.viewby;
+				$scope.maxSize = 5;
+			
+			$scope.setPage = function (pageNo) {
+			    $scope.currentPage = pageNo;
+			    $scope.pageChanged();
+			};
+			
+			$scope.pageChanged = function() {
+				var urlLimit = APPLCATIONS_URL + '?offset=' + ($scope.viewby*($scope.currentPage-1) + '&limit=' + $scope.viewby);
+				$http.get(urlLimit)
+					.success(function(data){
+						$scope.data = data;
+					});
+			};
+			
+			$scope.setItemsPerPage = function(num) {
+			  	$scope.itemsPerPage = num;
+			  	$scope.setPage(1);
+			};
 		});
 	</script>
+
 </body>
 </html>

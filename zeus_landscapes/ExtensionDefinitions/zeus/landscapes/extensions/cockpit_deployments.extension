@@ -1,0 +1,5 @@
+{
+  "extension":"/zeus/landscapes/extensions/cockpit_deployments",
+  "extension-point":"/zeus/cockpit/extension_point/cockpit",
+  "description":"Develop extension for the Cockpit extension point"
+}

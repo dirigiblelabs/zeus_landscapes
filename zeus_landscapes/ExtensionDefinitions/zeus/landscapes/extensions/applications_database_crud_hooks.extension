@@ -1,0 +1,5 @@
+{
+  "extension":"/zeus/landscapes/extensions/applicationsExtension",
+  "extension-point":"/zeus/landscapes/extension_points/applications_database_crud_hooks",
+  "description":"Database CRUD extension for the '/ScriptingServices/zeus/landscapes/applications.js' service, managing the 'ZEUS_APPLICATIONS' table"
+}

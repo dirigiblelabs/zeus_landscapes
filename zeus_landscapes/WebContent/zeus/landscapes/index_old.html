@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="page">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<title>Deployments</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="scripts/animate.min.css">
+<style>
+.selected-true {
+	background-color: #428bca;
+	color: white;
+}
+
+.hover-btn {
+	display: none;
+}
+    
+.row:hover .hover-btn {
+	display: block;
+}
+</style>
+</head>
+<body ng-controller="LandscapeController">
+	<div id="wrap">
+		<div class="row">
+			<div class="col-lg-12">
+		    	<h1 class="page-header">Deployments</h1>
+			</div>
+		</div>
+		<div class="container">
+			<!-- Button trigger modal -->
+			<button type="button" class="btn btn-default btn-primary btn pull-right" data-toggle="modal" data-target="#dialogCreateDeployment"><i class="fa fa-plus"></i> CREATE</button>
+			<table class="table table-condensed">
+				<thead>
+					<tr>
+						<th>Namespace</th>
+						<th>Name</th>
+						<th>Replicas</th>
+						<th>Images</th>
+						<th></th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="entry in data" ng-click="showInfoForEntry(entry)">
+						<td class="text-muted">{{entry.metadata.namespace}}</td>
+						<td ng-show="entry.url"><a href="{{entry.url}}" target="_blank">{{entry.metadata.name}}</a></td>
+						<td ng-hide="entry.url">{{entry.metadata.name}}</td>
+						<td class="text-muted">{{entry.status.availableReplicas}}/{{entry.status.replicas}}</td>
+						<td class="text-muted"><i<span ng-repeat="container in entry.spec.template.spec.containers"><i>{{container.image}}</i><span></td>
+						<td><button type="button" class="close" ng-click="setToBeEdited(entry)" data-toggle="modal" data-target="#dialogEditDeployment"><i class="fa fa-edit"></i></button></td>
+						<td><button type="button" class="close" ng-click="setToBeDeleted(entry)" data-toggle="modal" data-target="#dialogDeleteDeployment"><i class="fa fa-trash-o"></i></button></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<!-- Create Dialog -->
+	<div class="modal fade" id="dialogCreateDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogCreateDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogCreateDeploymentLabel">Create Deployment</h4>
+				</div>
+				<div class="modal-body">
+
+					<div class="form-group row">
+					  <label class="col-xs-3 col-form-label">Name</label>
+					  <div class="col-xs-9">
+					    <input class="form-control" type="text" placeholder="Deployment Name" ng-model="deploymentData.name">
+					  </div>
+					</div>
+					<div class="form-check row">
+					  <label class="col-xs-3 col-form-label">Auto-Scale</label>
+					  <div class="col-xs-9">
+					    <input class="form-check-input" type="checkbox" placeholder="Deployment Name" ng-model="deploymentData.autoscale.enabled">
+					  </div>
+					</div>
+
+					<div ng-show="deploymentData.autoscale.enabled">
+						<hr>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">CPU %</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="CPU %" ng-model="deploymentData.autoscale.targetCPUUtilizationPercentage">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Min</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Min Replicas" ng-model="deploymentData.autoscale.minReplicas">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Max</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Max Replicas" ng-model="deploymentData.autoscale.maxReplicas">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="create()" data-dismiss="modal">Deploy</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Create Dialog -->
+
+	<!-- Edit Dialog -->
+	<div class="modal fade" id="dialogEditDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogEditDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogEditDeploymentLabel">Edit Deployment</h4>
+				</div>
+				<div class="modal-body">
+
+					<div class="form-group row">
+					  <label class="col-xs-3 col-form-label">Name</label>
+					  <div class="col-xs-9">
+					    <input class="form-control" type="text" placeholder="Deployment Name" ng-model="editDeploymentData.name">
+					  </div>
+					</div>
+					<div class="form-check row">
+					  <label class="col-xs-3 col-form-label">Auto-Scale</label>
+					  <div class="col-xs-9">
+					    <input class="form-check-input" type="checkbox" placeholder="Deployment Name" ng-model="editDeploymentData.autoscale.enabled">
+					  </div>
+					</div>
+
+					<div ng-show="editDeploymentData.autoscale.enabled">
+						<hr>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">CPU %</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="CPU %" ng-model="editDeploymentData.autoscale.targetCPUUtilizationPercentage">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Min</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Min Replicas" ng-model="editDeploymentData.autoscale.minReplicas">
+							</div>
+						</div>
+						<div class="form-group row">
+							<label class="col-xs-3 col-form-label">Max</label>
+							<div class="col-xs-9">
+								<input class="form-control" type="number" placeholder="Max Replicas" ng-model="editDeploymentData.autoscale.maxReplicas">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" ng-click="update()" data-dismiss="modal">Update</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Edit Dialog -->
+
+	<!-- Delete Dialog -->
+	<div class="modal fade" id="dialogDeleteDeployment" tabindex="-1" role="dialog" aria-labelledby="dialogDeleteDeploymentLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					<h4 class="modal-title" id="dialogDeleteDeploymentLabel">Delete a Deployment</h4>
+				</div>
+				<div class="modal-body">
+					<p>Are you sure you want to delete Deployment <b><i>{{deleteDeploymentName}}</i></b> in namespace <b><i>{{deleteDeploymentNamespace}}</i></b>?</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" ng-click="delete()" data-dismiss="modal">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- End Delete Dialog -->
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-resource.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular-animate.min.js"></script>
+	<script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.3.js"></script>
+
+	<script src="scripts/bootstrap-notify.min.js"></script>
+
+	<script type="text/javascript">
+		angular.module('page', ['ngAnimate', 'ui.bootstrap']);
+		angular.module('page').controller('LandscapeController', function ($scope, $http) {
+			$scope.namespace = 'default';
+			$scope.deploymentData = {
+				'name': null,
+				'image': 'docker.io/dirigiblelabs/dirigible-tomcat:latest',
+				'replicas': 1,
+				'env': [{
+					'name': 'DefaultDB_username',
+					'value': 'root'
+				}],
+				'autoscale': {
+					'enabled': false,
+					'minReplicas': 1,
+					'maxReplicas': 5,
+					'targetCPUUtilizationPercentage': 50
+				}
+			};
+
+			$scope.editDeploymentData = {
+				'name': null,
+				'env': [{
+					'name': 'DefaultDB_username',
+					'value': 'root'
+				}],
+				'autoscale': {
+					'enabled': false,
+					'minReplicas': 1,
+					'maxReplicas': 5,
+					'targetCPUUtilizationPercentage': 50
+				}
+			};
+
+			loadDeployments();
+
+			$scope.create = function() {
+				$http.post('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace, JSON.stringify($scope.deploymentData)).success(function(data) {
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was registered'
+						}, {
+							type: "success"
+						}
+					);
+				}).error(function(errorMessage) {
+					$.notify({
+						message: '<b>Error</b>: ' + errorMessage.message
+					}, {
+						type: "danger"
+					});
+				});
+				$scope.deploymentData.name = null;
+				$scope.deploymentData.autoscale.enabled = false;
+				$scope.deploymentData.autoscale.minReplicas = 1;
+				$scope.deploymentData.autoscale.maxReplicas = 5;
+			};
+
+			$scope.update = function() {
+				$http.put('../../../js/zeus/api/landscapes.js?namespace=' + $scope.editDeploymentNamespace + '&name=' + $scope.editDeploymentName, JSON.stringify($scope.editDeploymentData)).success(function(data) {
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + data.deployment.metadata.name + '\'</b> was updated'
+						}, {
+							type: "success"
+						}
+					);
+				}).error(function(errorMessage) {
+					$.notify({
+						message: '<b>Error</b>: ' + errorMessage.message
+					}, {
+						type: "danger"
+					});
+				});
+				$scope.editDeploymentData = null;
+			};
+
+			$scope.delete = function() {
+				var namespace = $scope.deleteDeploymentNamespace;
+				var name = $scope.deleteDeploymentName;
+				$http.delete('../../../js/zeus/api/landscapes.js?namespace=' + namespace + '&name=' + name).success(function(deployment) {
+					loadDeployments();
+					$.notify({
+							message: '<b>\'' + $scope.deleteDeploymentName + '\'</b> was deleted'
+						}, {
+							type: "success"
+						}
+					);
+				}).error(function(errorMessage) {
+					$.notify({
+							message: '<b>Error</b>: ' + errorMessage.message
+						}, {
+							type: "danger"
+						}
+					);
+				});
+			};
+
+			$scope.setToBeEdited = function(deployment) {
+				$scope.editDeploymentData.name = deployment.metadata.name;
+				$scope.editDeploymentNamespace = deployment.metadata.namespace;
+				$scope.editDeploymentName = deployment.metadata.name;
+			};
+
+			$scope.setToBeDeleted = function(deployment) {
+				$scope.deleteDeploymentNamespace = deployment.metadata.namespace;
+				$scope.deleteDeploymentName = deployment.metadata.name;
+			};
+
+			function loadDeployments() {
+				$http.get('../../../js/zeus/api/landscapes.js?namespace=' + $scope.namespace).success(function(data) {
+					$scope.data = data;
+				});
+			}
+		});
+	</script>
+</body>
+</html>

@@ -10,9 +10,11 @@ var servicesLib = require('zeus/api/libs/services');
 var replicasetsLib = require('zeus/api/libs/replicasets');
 var autoscaleLib = require('zeus/api/libs/autoscale');
 
-var IP = env.get('zeus.landscapes.ip');
-var HOST = env.get('zeus.landscapes.host');
-var TOKEN = env.get('zeus.landscapes.token');
+var IP = '123';//env.get('zeus.landscapes.ip');
+var HOST = 'https://api.eu-central-1.dkom.onvms.com';
+//env.get('zeus.landscapes.host');
+var TOKEN = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJkaXJpZ2libGUtdG9rZW4td2g0enYiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGlyaWdpYmxlIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiNzUxYzE4NmItZmNkNy0xMWU2LTg2M2MtMDY3N2ZkMGMzYWRmIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmRpcmlnaWJsZSJ9.T1IHKMeSHaNRyNM2lz8AaFQxJXNZ8VEMVF8P6ZMeSRLBF0xKO1P5yW72twTmd8b2Ae2xjO9hw2_uVuxv2pQ-Ou7PtPueKy_GYIOUAm96HPYBcBGYj8Q-q1HuGjSEDlL_XSXA0IXdT35JZgwQ-cDALN8WUwzmvWSPDCalgEcFIiCt9fWEof6UrU7TioG3RurPnfNEQu1AuDNeQ0nHiWKGOlMPcfPeKdmJOfzwlCn1lbJY2PN19gADxJYXsygVPlJEpCJqWDRRvxSHore9jAWWMXEMgovUQDqS-1SykHR6UtwGQ5-w0CdgfVaceAXIVkmbfKJa3e6QorMsg3NSVSJ99w';
+//env.get('zeus.landscapes.token');
 
 handleRequest(request, response, xss);
 
