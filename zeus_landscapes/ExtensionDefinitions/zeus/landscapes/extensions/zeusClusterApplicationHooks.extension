@@ -1,0 +1,5 @@
+{
+  "extension":"/zeus/landscapes/extensions/zeusClusterApplicationHooks",
+  "extension-point":"/zeus/deployer/extension_points/clusterApplicationHooks",
+  "description":"description for the extension zeusClusterSettingsProvider"
+}

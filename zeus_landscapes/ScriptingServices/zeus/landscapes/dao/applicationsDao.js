@@ -44,6 +44,25 @@ exports.get = function(id) {
     return entity;
 };
 
+// Return a single entity by name
+exports.getByName = function(name) {
+	var entity = null;
+    var connection = datasource.getConnection();
+    try {
+        var sql = 'SELECT * FROM ZEUS_APPLICATIONS WHERE APPLICATION_NAME = ?';
+        var statement = connection.prepareStatement(sql);
+        statement.setString(1, name);
+
+        var resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            entity = createEntity(resultSet);
+        }
+    } finally {
+        connection.close();
+    }
+    return entity;
+};
+
 // Return all entities
 exports.list = function(limit, offset, sort, desc) {
     var result = [];
