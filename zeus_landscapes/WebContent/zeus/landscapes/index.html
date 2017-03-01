@@ -106,7 +106,7 @@
 					<h4 class="modal-title" id="dialogDeleteApplicationLabel">Remove Application</h4>
 				</div>
 				<div class="modal-body">
-					<p>Are you sure you want to application <b>[<i>{{applicationToBeDeleted.name}}</i>]</b>?</p>
+					<p>Are you sure you want to application <b>[<i>{{applicationToBeDeleted.name}}{{applicationToBeDeleted.application_name}}</i>]</b>?</p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -423,7 +423,9 @@
 			};
 
 			$scope.removeApplication = function() {
-				$http.delete(UNDEPLOYER_URL + '?applicationName=' + $scope.applicationToBeDeleted.name).success(function() {
+				var applicationName = $scope.applicationToBeDeleted.name;
+				applicationName = applicationName ? applicationName : $scope.applicationToBeDeleted.application_name;
+				$http.delete(UNDEPLOYER_URL + '?applicationName=' + applicationName).success(function() {
 					loadApplications();
 				});
 			};
