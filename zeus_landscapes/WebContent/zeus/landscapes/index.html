@@ -398,13 +398,13 @@
 		angular.module('page', ['ngAnimate', 'ui.bootstrap']);
 		angular.module('page').controller('ListController', function ($scope, $http) {
 			
-			const APPLCATIONS_URL = '../../../js/zeus/landscapes/applications.js';
-			const APPLICATION_TEMPLATES_URL = '../../../js/zeus/templates/application.js';
-			const DEPLOYER_URL = '../../../js/zeus/deployer.js';
-			const UNDEPLOYER_URL = '../../../js/zeus/undeployer.js';
-			const DEPLOYMENTS_URL = '../../../js/zeus/application/deployments.js';
-			const SERVICES_URL = '../../../js/zeus/application/services.js';
-			const INGRESSES_URL = '../../../js/zeus/application/ingresses.js';
+			const APPLCATIONS_URL = '../../../js-secured/zeus/landscapes/applications.js';
+			const APPLICATION_TEMPLATES_URL = '../../../js-secured/zeus/templates/application.js';
+			const DEPLOYER_URL = '../../../js-secured/zeus/deployer.js';
+			const UNDEPLOYER_URL = '../../../js-secured/zeus/undeployer.js';
+			const DEPLOYMENTS_URL = '../../../js-secured/zeus/application/deployments.js';
+			const SERVICES_URL = '../../../js-secured/zeus/application/services.js';
+			const INGRESSES_URL = '../../../js-secured/zeus/application/ingresses.js';
 
 			loadApplications();
 
